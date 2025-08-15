@@ -100,7 +100,7 @@ const studentsData: Student[] = [
     { id: 'stu-1', name: 'Alice Johnson', email: 'alice@example.com', course: 'Advanced ML', progress: '75%', status: 'Active', joined: '2023-09-15' },
     { id: 'stu-2', name: 'Bob Williams', email: 'bob@example.com', course: 'Data Science Intro', progress: '100%', status: 'Completed', joined: '2023-05-20' },
 ];
-    const instructorsData: Instructor[] = [
+const instructorsData: Instructor[] = [
     { id: 'inst-1', name: 'Dr. Evelyn Reed', email: 'evelyn.r@example.com', courses: '5', rating: '4.9/5', status: 'Active' },
     { id: 'inst-2', name: 'Marcus Chen', email: 'marcus.c@example.com', courses: '3', rating: '4.8/5', status: 'Active' },
     { id: 'inst-3', name: 'Helena Petrova', email: 'helena.p@example.com', courses: '7', rating: '4.9/5', status: 'On Leave' },
@@ -150,46 +150,44 @@ export default function SuperAdminDashboard() {
     // State for instructor modal
     const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
+    const [instructorToDelete, setInstructorToDelete] = useState<Instructor | null>(null);
     
     // MODIFIED: State for confirmation modal
-
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
     const currentView = viewData[activeView as keyof typeof viewData];
     const viewsWithoutAddButton = ['leads', 'scheduleCalls', 'joinProjects'];
 
-
+      // --- HANDLER FUNCTIONS ---
     const handleViewStudent = (student: Student) => {
         setSelectedStudent(student);
         setIsStudentModalOpen(true);
-
     };
-
-
     const handleDeleteStudent = (student: Student) => {
         setStudentToDelete(student);
         setIsConfirmOpen(true);
     };
-
-
     const confirmDelete = () => {
-        alert(`Deleting ${studentToDelete?.name}`);
+        if (studentToDelete) {
+            alert(`Deleting ${studentToDelete.name}`);
+            // Add actual deletion logic here
+        }
         setIsConfirmOpen(false);
+        setStudentToDelete(null);
     }
-
-
     const confirmBlock = () => {
-        alert(`Blocking ${studentToDelete?.name}`);
+        if (studentToDelete) {
+            alert(`Blocking ${studentToDelete.name}`);
+            // Add actual blocking logic here
+        }
         setIsConfirmOpen(false);
+        setStudentToDelete(null);
     }
-
-
     const handleViewClick = (lead: Lead) => {
         setSelectedLead(lead);
         setIsModalOpen(true);
     };
-
     // MODIFIED: Functions to handle deletion
     const handleDeleteClick = (lead: Lead) => {
         setLeadToDelete(lead);
@@ -203,7 +201,31 @@ export default function SuperAdminDashboard() {
             alert(`Lead "${leadToDelete.name}" has been deleted.`);
             setIsConfirmOpen(false);
             setLeadToDelete(null);
+        } else if (instructorToDelete) {
+            console.log("Deleting instructor:", instructorToDelete.id);
+            alert(`Instructor "${instructorToDelete.name}" has been deleted.`);
+            setIsConfirmOpen(false);
+            setInstructorToDelete(null);
         }
+    };
+
+    const handleViewInstructor = (instructor: Instructor) => {
+        setSelectedInstructor(instructor);
+        setIsInstructorModalOpen(true);
+    };
+
+    const handleDeleteInstructor = (instructor: Instructor) => {
+        setInstructorToDelete(instructor);
+        setIsConfirmOpen(true);
+    };
+
+    const handleConfirmInstructorBlock = () => {
+        if (instructorToDelete) {
+            alert(`Blocking ${instructorToDelete.name}`);
+            // Add actual blocking logic here
+        }
+        setIsConfirmOpen(false);
+        setInstructorToDelete(null);
     };
 
 
@@ -218,6 +240,7 @@ export default function SuperAdminDashboard() {
             </TableRow>
         );
     }
+    
     switch (activeView) {
         case 'students':
             return (
@@ -254,8 +277,8 @@ export default function SuperAdminDashboard() {
         <TableCell><Badge className={getStatusColor(item.status)}>{item.status}</Badge></TableCell>
         <TableCell className="text-right">
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => alert(`Viewing ${item.name}`)}><Eye className="w-4 h-4 mr-2" />View</Button>
-            <Button variant="destructive" size="sm" onClick={() => alert(`Deleting ${item.name}`)}><Trash2 className="w-4 h-4" /></Button>
+            <Button variant="outline" size="sm" onClick={() => handleViewInstructor(item)}><Eye className="w-4 h-4 mr-2" />View</Button>
+            <Button variant="destructive" size="sm" onClick={() => handleDeleteInstructor(item)}><Trash2 className="w-4 h-4" /></Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="w-8 h-8"><MoreVertical className="w-4 h-4"/></Button>
@@ -342,7 +365,9 @@ export default function SuperAdminDashboard() {
                                     <Button variant="outline"><Briefcase className="w-4 h-4 mr-2" />Careers</Button>
                                 </Link>
                                 <Button variant="outline"><Download className="h-4 w-4 mr-2" />Export</Button>
-                                <Button className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-cyan-500/25">
+                                <Button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-cyan-500/25">
                                     <Activity className="h-4 w-4 mr-2" />
                                     Refresh
                                 </Button>
@@ -438,30 +463,40 @@ export default function SuperAdminDashboard() {
                 lead={selectedLead}
             />
             <ConfirmationModal
-                isOpen={isConfirmOpen}
-                onClose={() => setIsConfirmOpen(false)}
+                isOpen={isConfirmOpen && !!leadToDelete}
+                onClose={() => {
+                    setIsConfirmOpen(false);
+                    setLeadToDelete(null);
+                }}
                 onConfirm={handleConfirmDelete}
                 title="Are you sure?"
                 description={`This action cannot be undone. This will permanently delete the lead for "${leadToDelete?.name}".`}
             />
             <StudentDetailModal isOpen={isStudentModalOpen} onClose={() => setIsStudentModalOpen(false)} student={selectedStudent} />
             <StudentConfirmationModal
-                isOpen={isConfirmOpen}
-                onClose={() => setIsConfirmOpen(false)}
+                isOpen={isConfirmOpen && !!studentToDelete}
+                onClose={() => {
+                    setIsConfirmOpen(false);
+                    setStudentToDelete(null);
+                }}
                 onConfirmDelete={confirmDelete}
                 onConfirmBlock={confirmBlock}
                 studentName={studentToDelete?.name || ''}
             />
             <InstructorDetailModal isOpen={isInstructorModalOpen} onClose={() => setIsInstructorModalOpen(false)} instructor={selectedInstructor} />
-            {/* Update the ConfirmationModal props when dealing with instructors */}
-            <InstructorConfirmationModal 
-                isOpen={isConfirmOpen}
-                onClose={() => setIsConfirmOpen(false)}
-                onConfirmDelete={confirmDelete}
-                onConfirmBlock={confirmBlock}
-                title="Are you absolutely sure?"
-                description={`This action cannot be undone. This will permanently remove the data for ".`}
-                itemType={activeView === 'students' || activeView === 'instructors' ? 'student' : 'lead'} instructorName={''}        />
-                </div>
+            <InstructorConfirmationModal
+                isOpen={isConfirmOpen && !!instructorToDelete}
+                onClose={() => {
+                    setIsConfirmOpen(false);
+                    setInstructorToDelete(null);
+                }}
+                onConfirmDelete={handleConfirmDelete}
+                onConfirmBlock={handleConfirmInstructorBlock}
+                title="Confirm Action on Instructor"
+                description={`Are you sure you want to proceed with this action for "${instructorToDelete?.name}"?`}
+                itemType="instructor"
+                instructorName={instructorToDelete?.name || ''}
+            />
+        </div>
     );
 }

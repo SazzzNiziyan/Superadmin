@@ -69,21 +69,21 @@ export function FeaturedCoursesSection() {
     timeCommitment: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isClient, setIsClient] = useState(false); // State to track client-side mount
+  const [isClient, setIsClient] = useState(false);
 
-  // FIX: This useEffect ensures window-dependent code runs only on the client
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
+    if (!isClient) return;
+
     const fetchCourses = async () => {
       try {
         const response = await axios.get("/api/courses");
         const allCourses = response.data.courses || [];
         
-        // FIX: Check isClient before accessing window
-        const isTablet = isClient && window.innerWidth >= 768 && window.innerWidth <= 1024;
+        const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
 
         const count = isTablet ? 4 : 3;
         const featuredCourses = allCourses.filter(
@@ -99,9 +99,7 @@ export function FeaturedCoursesSection() {
         console.error("Error fetching courses:", error);
       }
     };
-    if (isClient) { // Run fetchCourses only on the client
-        fetchCourses();
-    }
+    fetchCourses();
   }, [isClient]);
 
   const handleInputChange = (field: keyof FormData, value: string | string[]) => {

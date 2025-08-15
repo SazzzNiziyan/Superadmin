@@ -31,13 +31,13 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm, title, descripti
             <DialogDescription className="text-slate-400 mb-6">
                 {description}
             </DialogDescription>
-            <DialogFooter className="flex gap-4">
-                <Button variant="outline" onClick={onClose} className="flex-1">
+            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+                <Button variant="outline" onClick={onClose}>
                     Cancel
                 </Button>
-                <Button variant="destructive" onClick={onConfirm} className="flex-1">
+                <Button variant="destructive" onClick={onConfirm}>
                     <Trash2 className="w-4 h-4 mr-2"/>
-                    Delete Entry
+                    Delete
                 </Button>
             </DialogFooter>
         </div>
